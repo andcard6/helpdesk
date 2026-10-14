@@ -1,0 +1,8 @@
+fastapi>=0.115            # 01: el framework de la API
+uvicorn[standard]>=0.30   # 01: el servidor que ejecuta la API
+sqlalchemy>=2.0           # 02: ORM para hablar con la base de datos
+psycopg[binary]>=3.2      # 02: driver de PostgreSQL
+pydantic[email]>=2.7      # 03: validación de datos (incluye validar emails)
+pydantic-settings>=2.3    # 02: leer la configuración desde variables de entorno
+PyJWT>=2.8                # 04: crear y verificar tokens JWT
+bcrypt>=4.1               # 02: hash de contraseñas
