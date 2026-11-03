@@ -1,18 +1,19 @@
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 
 from .config import settings
 from .database import Base, SessionLocal, engine
 from .models import Role, User
+from .routers import auth, tickets, users
 from .security import hash_password
 
 
 def init_db():
-    for _ in range(10):  # la BD puede tardar unos segundos en aceptar conexiones
+    for _ in range(10):  # La BD puede tardar unos segundos en aceptar conexiones al arrancar
         try:
             Base.metadata.create_all(engine)
             break
@@ -37,8 +38,8 @@ def init_db():
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()  # se ejecuta una vez, al arrancar
-    yield      # aquí la API atiende peticiones
+    init_db()  # Se ejecuta una vez al arrancar la API
+    yield      # Aquí la API atiende peticiones HTTP
 
 
 app = FastAPI(title="HelpDesk API", lifespan=lifespan)
@@ -47,3 +48,12 @@ app = FastAPI(title="HelpDesk API", lifespan=lifespan)
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+# Registro general de Routers bajo el prefijo global /api
+api = APIRouter(prefix="/api")
+api.include_router(auth.router)
+api.include_router(tickets.router)
+api.include_router(users.router)
+
+app.include_router(api)
