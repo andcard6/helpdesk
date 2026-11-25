@@ -30,9 +30,10 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('shows login and register links when logged out', async () => {
+  it('shows only brand and auth links when logged out (no protected nav)', async () => {
     const el = await render();
     expect(el.querySelector('.brand')?.textContent).toContain('HelpDesk');
+    expect(el.querySelector('nav')).toBeNull();
     expect(el.querySelector('.session')?.textContent).toContain('Iniciar sesión');
     expect(el.querySelector('.session')?.textContent).toContain('Registrarse');
   });
@@ -45,9 +46,11 @@ describe('App', () => {
 
   it('shows the "Usuarios" link to admins and coordinators', async () => {
     expect((await render('admin')).querySelector('nav')?.textContent).toContain('Usuarios');
+    expect((await render('coordinator')).querySelector('nav')?.textContent).toContain('Usuarios');
   });
 
-  it('hides the "Usuarios" link from regular users', async () => {
+  it('hides the "Usuarios" link from regular users and agents', async () => {
     expect((await render('user')).querySelector('nav')?.textContent).not.toContain('Usuarios');
+    expect((await render('agent')).querySelector('nav')?.textContent).not.toContain('Usuarios');
   });
 });

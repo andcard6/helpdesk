@@ -1,4 +1,4 @@
-<h1>Tickets ({{ tickets().length }})</h1>
+<h1>{{ auth.hasRole('user') ? 'Mis tickets' : 'Todos los tickets' }} ({{ tickets().length }})</h1>
 
 <div class="card">
   <h2>Nuevo ticket</h2>

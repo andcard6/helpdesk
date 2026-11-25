@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../core/auth.service';
 import { Priority, Ticket } from '../../core/models';
 
 // TEMPORAL: datos de prueba locales hasta conectar el servicio HTTP de tickets.
@@ -32,6 +33,8 @@ const MOCK_TICKETS: Ticket[] = [
   templateUrl: './tickets.html',
 })
 export class Tickets {
+  protected auth = inject(AuthService);
+
   tickets = signal<Ticket[]>(MOCK_TICKETS);
 
   title = '';
@@ -40,6 +43,7 @@ export class Tickets {
 
   create() {
     if (!this.title.trim() || !this.description.trim()) return;
+    const currentUser = this.auth.user();
     const ticket: Ticket = {
       id: Date.now(),
       title: this.title.trim(),
@@ -47,7 +51,7 @@ export class Tickets {
       priority: this.priority,
       status: 'open',
       created_at: new Date().toISOString(),
-      author: { id: 0, name: 'Yo' },
+      author: { id: currentUser?.id ?? 0, name: currentUser?.name ?? 'Yo' },
     };
     this.tickets.update((list) => [ticket, ...list]);
     this.title = '';

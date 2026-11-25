@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { AuthService } from '../../core/auth.service';
 
 @Component({
   imports: [],
@@ -6,4 +7,6 @@ import { Component } from '@angular/core';
   styleUrl: './users.css',
   templateUrl: './users.html',
 })
-export class Users {}
+export class Users {
+  protected auth = inject(AuthService);
+}

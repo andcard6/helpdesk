@@ -1,4 +1,11 @@
+<h1>Panel de usuarios</h1>
 <div class="card">
-  <h2>Gestión de usuarios</h2>
-  <p>Panel administrativo en construcción (disponible en iteraciones posteriores).</p>
+  <p>
+    Sesión activa: <strong>{{ auth.user()?.name }}</strong>
+    (<span class="badge {{ auth.user()?.role }}">{{ auth.user()?.role }}</span>)
+  </p>
+  <p>
+    Vista base protegida por rol (<code>admin</code> / <code>coordinator</code>). La gestión completa contra
+    <code>/api/users</code> se conecta en las siguientes iteraciones.
+  </p>
 </div>
