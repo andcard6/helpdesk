@@ -1,57 +1,142 @@
-<h1>{{ auth.hasRole('user') ? 'Mis tickets' : 'Todos los tickets' }} ({{ tickets().length }})</h1>
+<h1>{{ auth.hasRole('user') ? 'Mis tickets' : 'Todos los tickets' }}</h1>
 
-<div class="card">
-  <h2>Nuevo ticket</h2>
-  <form (ngSubmit)="create()">
-    <label>Título <input name="title" [(ngModel)]="title" required maxlength="120" /></label>
-    <label>
-      Prioridad
-      <select name="priority" [(ngModel)]="priority">
-        <option value="low">Baja</option>
-        <option value="medium">Media</option>
-        <option value="high">Alta</option>
-      </select>
-    </label>
-    <label class="full-width">
-      Descripción
-      <textarea name="description" rows="3" [(ngModel)]="description" required></textarea>
-    </label>
-    <button type="submit" class="full-width">Crear ticket</button>
-  </form>
+@if (auth.hasRole('user')) {
+  <div class="card">
+    <h2>Nuevo ticket</h2>
+    <form class="ticket-form" [formGroup]="form" (ngSubmit)="create()" novalidate>
+      <label class="full-width">
+        Título
+        <input type="text" formControlName="title" maxlength="120" placeholder="Ej. Sin internet en sala 3" />
+        @if (hasError('title', 'required')) {
+          <span class="field-error">El título es obligatorio</span>
+        } @else if (hasError('title', 'maxlength')) {
+          <span class="field-error">Máximo 120 caracteres</span>
+        }
+      </label>
+
+      <label>
+        Tipo
+        <select formControlName="ticket_type">
+          @for (tp of types; track tp.value) {
+            <option [value]="tp.value">{{ tp.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Prioridad
+        <select formControlName="priority">
+          @for (p of priorities; track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="full-width">
+        Descripción
+        <textarea rows="3" formControlName="description" placeholder="Describe el problema o solicitud"></textarea>
+        @if (hasError('description', 'required')) {
+          <span class="field-error">La descripción es obligatoria</span>
+        }
+      </label>
+
+      <button type="submit" class="full-width" [disabled]="creating()">
+        {{ creating() ? 'Creando...' : 'Crear ticket' }}
+      </button>
+    </form>
+  </div>
+}
+
+<div class="card filters">
+  <label>
+    Buscar
+    <input
+      type="search"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+      placeholder="Título, descripción o autor..."
+    />
+  </label>
+  <label>
+    Estado
+    <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+      <option value="all">Todos</option>
+      @for (s of statuses; track s.value) {
+        <option [value]="s.value">{{ s.label }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Prioridad
+    <select [ngModel]="priorityFilter()" (ngModelChange)="priorityFilter.set($event)">
+      <option value="all">Todas</option>
+      @for (p of priorities; track p.value) {
+        <option [value]="p.value">{{ p.label }}</option>
+      }
+    </select>
+  </label>
 </div>
 
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
+
 <div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Título</th>
-        <th>Autor</th>
-        <th>Prioridad</th>
-        <th>Estado</th>
-        <th>Fecha</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (t of tickets(); track t.id) {
+  @if (loading()) {
+    <p class="muted">Cargando tickets...</p>
+  } @else {
+    <table>
+      <thead>
         <tr>
-          <td>{{ t.id }}</td>
-          <td>
-            <strong>{{ t.title }}</strong><br />
-            <small class="ticket-desc">{{ t.description }}</small>
-          </td>
-          <td>{{ t.author.name }}</td>
-          <td><span class="badge {{ t.priority }}">{{ t.priority }}</span></td>
-          <td><span class="badge {{ t.status }}">{{ t.status }}</span></td>
-          <td>{{ t.created_at | date: 'short' }}</td>
-          <td><button type="button" class="danger" (click)="remove(t)">Borrar</button></td>
+          <th>#</th>
+          <th>Título</th>
+          <th>Tipo</th>
+          <th>Autor</th>
+          <th>Asignado</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th></th>
         </tr>
-      } @empty {
-        <tr>
-          <td colspan="7">No hay tickets.</td>
-        </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (t of filteredTickets(); track t.id) {
+          <tr>
+            <td>{{ t.id }}</td>
+            <td>
+              <a class="ticket-link" [routerLink]="['/tickets', t.id]"><strong>{{ t.title }}</strong></a>
+              <br />
+              <small class="ticket-desc">{{ t.description }}</small>
+            </td>
+            <td>{{ t.ticket_type }}</td>
+            <td>{{ t.author.name }}</td>
+            <td>{{ t.assigned_to?.name ?? 'Sin asignar' }}</td>
+            <td><span class="badge {{ t.priority }}">{{ t.priority }}</span></td>
+            <td>
+              @if (auth.hasRole('agent', 'coordinator', 'admin')) {
+                <select [ngModel]="t.status" (ngModelChange)="setStatus(t, $event)">
+                  @for (s of statuses; track s.value) {
+                    <option [value]="s.value">{{ s.value }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="badge {{ t.status }}">{{ t.status }}</span>
+              }
+            </td>
+            <td>{{ t.created_at | date: 'short' }}</td>
+            <td class="actions-cell">
+              <a class="detail-link" [routerLink]="['/tickets', t.id]">Detalle</a>
+              @if (auth.hasRole('admin')) {
+                <button type="button" class="danger" (click)="remove(t)">Borrar</button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9">No hay tickets.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
 </div>

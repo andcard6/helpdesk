@@ -2,12 +2,51 @@
   color: #64748b;
 }
 
-.card form {
+.ticket-form {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
 .full-width {
   grid-column: 1 / -1;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.ticket-link {
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.ticket-link:hover,
+.detail-link:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+
+.detail-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.muted {
+  color: #64748b;
+  margin: 0;
+}
+
+td select {
+  padding: 4px 8px;
 }
