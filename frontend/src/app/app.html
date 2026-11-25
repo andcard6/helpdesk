@@ -1,0 +1,29 @@
+<header>
+  <a class="brand" routerLink="/">{{ appName }}</a>
+  @if (auth.isLoggedIn()) {
+    <nav>
+      <a routerLink="/tickets" routerLinkActive="active">Tickets</a>
+      @if (auth.hasRole('admin', 'coordinator')) {
+        <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+      }
+    </nav>
+    <div class="session">
+      <span>
+        {{ auth.user()?.name }}
+        <small class="badge {{ auth.user()?.role }}">{{ auth.user()?.role }}</small>
+      </span>
+      <button type="button" class="secondary" (click)="auth.logout()">Salir</button>
+    </div>
+  } @else {
+    <nav>
+      <a routerLink="/tickets" routerLinkActive="active">Tickets</a>
+    </nav>
+    <div class="session">
+      <a routerLink="/login" routerLinkActive="active">Iniciar sesión</a>
+      <a routerLink="/register" routerLinkActive="active">Registrarse</a>
+    </div>
+  }
+</header>
+<main>
+  <router-outlet />
+</main>

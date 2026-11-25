@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     admin_password: str
     secret_key: str = "dev-only-change-me-7f3a9c1e5b2d4f60a8c3e1b9d7f5a2c4"
     access_token_expire_minutes: int = 60
+    cors_origins: str = "http://localhost:4200"
 
 
 settings = Settings()

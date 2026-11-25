@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import CurrentUser, require_roles
-from ..models import Role, Ticket, TicketComment, TicketStatus
+from ..models import Role, Ticket, TicketComment, TicketStatus, User
 from ..schemas import CommentIn, CommentOut, TicketIn, TicketOut, TicketUpdate
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -25,7 +25,7 @@ def list_tickets(db: DB, user: CurrentUser):
     elif user.role == Role.agent:
         query = query.where((Ticket.assigned_to_id == user.id) | (Ticket.assigned_to_id.is_(None)))
 
-    return db.scalars(query).all()
+    return db.scalars(query).unique().all()
 
 
 @router.get("/{ticket_id}", response_model=TicketOut)
@@ -55,7 +55,7 @@ def update_ticket(
     ticket_id: int,
     data: TicketUpdate,
     db: DB,
-    user: Annotated[CurrentUser, Depends(require_roles(Role.agent, Role.coordinator, Role.admin))],
+    user: Annotated[User, Depends(require_roles(Role.agent, Role.coordinator, Role.admin))],
 ):
     ticket = db.get(Ticket, ticket_id)
     if not ticket:
@@ -75,7 +75,8 @@ def update_ticket(
 
     # Aplicar cambios enviados (estado, prioridad, técnico asignado)
     for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(ticket, field, value)
+        if value is not None or field == "assigned_to_id":
+            setattr(ticket, field, value)
 
     db.commit()
     db.refresh(ticket)
